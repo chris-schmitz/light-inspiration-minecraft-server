@@ -10,8 +10,10 @@ This is an infrastructure as code project that serves several purposes:
 
 ## Challenges to overcome
 - Pointing the route53 dns records to the ec2 instance ip address in code
+- Best way of installing, configuring, and launching minecraft server once the instance is upG
 
 ## The infrastructure 
+
 
 ### Security Group rules
 **Inbound rules**:
@@ -52,7 +54,9 @@ So, considering we're using a `c6g.medium` ec2 instance with 2 gb of ram:
 - [Making Amazon Route 53 the DNS service for an existing domain](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html)
 - [Routing traffic to an Amazon EC2 instance](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-ec2-instance.html)
 - [Example of a simple route53 -> ec2 instance terraform structure](https://stackoverflow.com/questions/63307373/terraform-route53-simplest-example-to-create-a-dns-record-in-hosted-zone-pointin)
+- [Helpful walkthrough re: getting started with aws via terraform](https://www.youtube.com/watch?v=iRaai1IBlB0&ab_channel=freeCodeCamp.org)
 ### Terraform tools
+- [aws_provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [aws_route53_record](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record)
 - [aws_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group)
 - [aws_instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance)
