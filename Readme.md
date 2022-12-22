@@ -16,8 +16,28 @@ This is an infrastructure as code project that serves several purposes:
   - Read ____ in the aws documentation
   - AWS recipes?
 
-## The infrastructure 
+## Get up and running
+To clone and setup the project run the following shell commands: 
 
+```shell
+git clone git@github.com:chris-schmitz/light-inspiration-minecraft-server.git
+cd light-inspiration-minecraft-server/infrastructure
+
+cp secrets.tfvars-template secrets.tfvars 
+# ! After copying the secrets file look up your external ip address via
+# ! something like https://www.ipchicken.com/ and add it as the secret's file `my_ip_address_in_cidr`
+# ! value with a /32 at the end. 
+# ? e.g. my_ip_address_in_cidr="99.99.99.99/32"
+```
+
+To include the variables file when planning and applying use the following commands:
+```shell
+terraform plan -var-file="secrets.tfvars"
+# and 
+terraform apply -var-file="secrets.tfvars"
+```
+
+## The infrastructure for minecraft server
 
 ### Security Group rules
 **Inbound rules**:
@@ -29,9 +49,6 @@ This is an infrastructure as code project that serves several purposes:
 
 ### EC2 instance details
 Multiplayer minecraft requires a decent amount of power, so to run it we'll be using a **c6g.medium** EC2 instance type. 
-
-
-### Route 53
 
 ## Planning notes
 
@@ -84,8 +101,9 @@ terraform fmt # any .tf files in the directory (and subdirectories??) are reform
 - [Free Code Camp walkthrough re: getting started with aws via terraform](https://www.youtube.com/watch?v=iRaai1IBlB0&ab_channel=freeCodeCamp.org)
 - [Terraform's official getting started tutorial](https://developer.hashicorp.com/terraform/tutorials/aws-get-started?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS)
 - [Terraform gitignore](https://github.com/github/gitignore/blob/main/Terraform.gitignore)
+- [Nice brief explanation of CIDR notation](https://www.youtube.com/watch?v=u13AdjAUNmA)
 
-### Terraform tools
+### Terraform tools used
 - [aws_provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [aws_route53_record](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record)
 - [aws_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group)

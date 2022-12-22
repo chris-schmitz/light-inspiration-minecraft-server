@@ -46,3 +46,20 @@ resource "aws_route_table_association" "minecraft_route_table_association" {
   route_table_id = aws_route_table.minecraft_route_table.id
   subnet_id = aws_subnet.minecraft_subnet.id
 }
+
+resource "aws_security_group" "minecraft_security_group" {
+  name = "minecraft_security_group"
+  vpc_id = aws_vpc.minecraft_vpc.id
+
+  ingress {
+    from_port = 0
+    protocol  = "-1"
+    to_port   = 0
+    cidr_blocks = [var.my_ip_address_in_cidr]
+  }
+  egress {
+    from_port = 0
+    protocol  = ""
+    to_port   = 0
+  }
+}
