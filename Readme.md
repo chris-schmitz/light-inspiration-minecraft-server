@@ -37,6 +37,7 @@ terraform plan -var-file="secrets.tfvars"
 terraform apply -var-file="secrets.tfvars"
 ```
 
+
 ## The infrastructure for minecraft server
 
 ### Security Group rules
@@ -92,6 +93,15 @@ The terraform cli tool has a `fmt` command that will reformat the `.tf` files in
 ```shell
 terraform fmt # any .tf files in the directory (and subdirectories??) are reformatted
 ```
+### Silent fails
+I ran into an instance where a terraform apply would look like it succeeded, but when running a plan right after I would see that certain resources weren't completely applied. I would see the same change in the plan over and over. 
+
+In this particular case it was because I forgot to provide a cidr block value for the egress section:
+![silent fail example](readme_attachments/terraform-silent-fail-example.png)
+
+I call this out because **I never got an error message from terraform**; the change just never applied. I'm assuming what was happening was that terraform didn't fail, it made the aws API calls correctly, it just didn't catch or relay an error happening on the aws side.
+
+Once I added a cidr block value the change applied without issue and the next plan command result was clean. Just something to look out for as you build up your infrastructure.
 
 
 ## Resources
@@ -111,6 +121,9 @@ terraform fmt # any .tf files in the directory (and subdirectories??) are reform
 - [aws_route_table](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table)
 - [aws_route](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route)
 - [aws_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group)
+- [aws_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami)
+- [aws_key_pair](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/key_pair)
+- [terraform variables](https://developer.hashicorp.com/terraform/language/values/variables)
 
 ### AWS docs
 - [internet gateway](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html)

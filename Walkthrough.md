@@ -47,3 +47,7 @@ which brew
 ## Add a terraform module
 
 ## Run a terraform plan, check, apply, and then confirm
+
+
+# AMI (Amazon Machine Image) Owner Id
+137112412989
