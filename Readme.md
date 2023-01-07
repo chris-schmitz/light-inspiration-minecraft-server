@@ -23,7 +23,7 @@ To clone and setup the project run the following shell commands:
 git clone git@github.com:chris-schmitz/light-inspiration-minecraft-server.git
 cd light-inspiration-minecraft-server/infrastructure
 
-cp secrets.tfvars-template secrets.tfvars 
+cp terraform.tfvars-template terraform.tfvars 
 # ! After copying the secrets file look up your external ip address via
 # ! something like https://www.ipchicken.com/ and add it as the secret's file `my_ip_address_in_cidr`
 # ! value with a /32 at the end. 
@@ -73,6 +73,18 @@ So, considering we're using a `c6g.medium` ec2 instance with 2 gb of ram:
 - If we ever got to the point where we needed more players it would be worth paying for a service that already handles it and transferring our world instance there
 
 ## Helpful callouts learned from the project
+
+### auto loading terraform variables
+There are several ways of passing variables to terraform and these ways can be combined [with some methods taken precedence over others](https://developer.hashicorp.com/terraform/language/values/variables#variable-definition-precedence), but most of these methods require you explicitly specifying the variables values or files that holds the variable values. 
+
+However, something that is kind of buried in the docs is the fact that [there are a couple of ways of automatically loading the variables](https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files):
+
+> Terraform also automatically loads a number of variable definitions files if they are present:
+>
+> - Files named exactly terraform.tfvars or terraform.tfvars.json.
+> - Any files with names ending in .auto.tfvars or .auto.tfvars.json.
+
+This is really handy because if you use one of these methods you can fire the `terraform plan|apply|destroy` commands without needing to type out the variables or the path to the variable file. :nice:
 
 ### terraform state list and show
 Instead of looking over an entire terraform state file to find what you need, you can use the `terraform state list` and `terraform state show <name>` commands to peek in on specific parts of the state.
@@ -124,6 +136,10 @@ Once I added a cidr block value the change applied without issue and the next pl
 - [aws_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami)
 - [aws_key_pair](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/key_pair)
 - [terraform variables](https://developer.hashicorp.com/terraform/language/values/variables)
+- [terraform provisioners](https://developer.hashicorp.com/terraform/language/resources/provisioners/syntax)
+- [terraform templatefile function](https://developer.hashicorp.com/terraform/language/functions/templatefile)
+- [conditional expressions](https://developer.hashicorp.com/terraform/language/expressions/conditionals)
+- [output values](https://developer.hashicorp.com/terraform/language/values/outputs)
 
 ### AWS docs
 - [internet gateway](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html)
