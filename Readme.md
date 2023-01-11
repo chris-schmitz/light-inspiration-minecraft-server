@@ -105,6 +105,16 @@ The terraform cli tool has a `fmt` command that will reformat the `.tf` files in
 ```shell
 terraform fmt # any .tf files in the directory (and subdirectories??) are reformatted
 ```
+
+### Triggering output without forcing changes
+The `output "..." {}` blocks are used in the tf files to print arbitrary data to the console after you `terraform apply`. You can think of them kind of like return values for a function. 
+
+Sometimes it's helpful to see these outputs without needing to apply changes. To do this you can use the `terraform output` command:
+
+```shell
+  terraform output 
+```
+
 ### Silent fails
 I ran into an instance where a terraform apply would look like it succeeded, but when running a plan right after I would see that certain resources weren't completely applied. I would see the same change in the plan over and over. 
 

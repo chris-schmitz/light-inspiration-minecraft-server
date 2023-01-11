@@ -23,6 +23,7 @@ chown -R minecraft:minecraft /opt/minecraft/server/
 
 su minecraft
 
+# TODO: rewrite this as a python script
 launchMinecraft()
 sleep 1m
 kill -9 findMinecraftPid()

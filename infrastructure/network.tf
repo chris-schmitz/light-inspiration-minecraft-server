@@ -1,7 +1,7 @@
 resource "aws_vpc" "minecraft_vpc" {
   cidr_block           = "10.123.0.0/16"
   enable_dns_hostnames = true
-  tags = {
+  tags                 = {
     Name   = "minecraft-vpc"
     domain = "minecraft"
   }
@@ -45,5 +45,9 @@ resource "aws_route" "default_route" {
 resource "aws_route_table_association" "minecraft_route_table_association" {
   route_table_id = aws_route_table.minecraft_route_table.id
   subnet_id      = aws_subnet.minecraft_subnet.id
+}
+
+resource "aws_route53_record" "minecraft_subdomain" {
+  
 }
 
