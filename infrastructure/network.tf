@@ -48,6 +48,10 @@ resource "aws_route_table_association" "minecraft_route_table_association" {
 }
 
 resource "aws_route53_record" "minecraft_subdomain" {
-  
+  zone_id = "Z09617233KFEYVT4WZZTH"
+  name    = "minecraft.light-inspiration.com"
+  type    = "A"
+  ttl     = 300
+  records = [aws_instance.minecraft_ec2.public_ip]
 }
 
