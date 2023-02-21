@@ -29,30 +29,38 @@ class Fixtures:
         mocker.patch("urllib.request.urlretrieve", mock)
 
     @pytest.fixture
-    def mock_subprocess_call(self, mocker):
+    def mock_subprocess_run(self, mocker):
         mock = MagicMock()
-        mocker.patch("subprocess.call", mock)
+        mocker.patch("subprocess.run", mock)
         return mock
 
     @pytest.fixture(autouse=True)
     def administrator(self):
-        return ServerAdministrator(minecraft_user="minecraft", directory="/opt/minecraft/server", port=25565,
-                                   max_memory=1024, min_memory=1024)
+        return ServerAdministrator(
+            minecraft_user="minecraft",
+            directory="/opt/minecraft/server",
+            port=25565,
+            max_memory=1024,
+            min_memory=1024
+        )
 
 
 class TestRunner(Fixtures):
-    def test_can_build_minecraft_directory_structure(self, administrator, mock_makedirs):
+    def test_can_build_minecraft_directory_structure(self, administrator, mock_makedirs, mock_urlretrieve):
         administrator.initialize_server()
 
         mock_makedirs.assert_called_with(administrator.directory, 0o755)
+        assert administrator.is_initialize == True
 
     def test_if_directory_already_exists_the_directory_already_exists_exception_is_suppressed(self, administrator,
-                                                                                              mock_makedirs):
-        mock_makedirs.side_effect = Exception("Directory already exists.")
+                                                                                              mock_makedirs,
+                                                                                              mock_urlretrieve):
+        mock_makedirs.side_effect = FileExistsError("Directory already exists.")
 
         administrator.initialize_server()
 
         mock_makedirs.assert_called_with(administrator.directory, 0o755)
+        assert administrator.is_initialize is True
 
     def test_can_download_the_server_jar(self, administrator, mock_makedirs, mock_urlretrieve):
         administrator.initialize_server()
@@ -62,12 +70,39 @@ class TestRunner(Fixtures):
             filename="/opt/minecraft/server/server.jar"
         )
 
-    def test_can_perform_initial_launch(self, administrator, mock_subprocess_call, mock_exists):
+    def test_if_server_is_initalized_can_perform_initial_launch(self, mocker, administrator, mock_subprocess_run,
+                                                                mock_exists):
+        administrator.max_memory = 4096
+        administrator.min_memory = 512
+        administrator.directory = "/test/directory"
+        administrator.port = 5555
+        administrator.user = "testuser"
+        administrator.is_initialize = True
         administrator.first_launch()
 
-        # ? Is this the best way of handling this idea?
-        # ? is it worth even checking for the eula considering we're having to fake out it's creation??
-        mock_subprocess_call.assert_called_with(
-            f"{administrator.directory}/java -Xmx2048M -Xms1024M -jar server.jar nogui"
+        mock_subprocess_run.assert_called_with(
+            [
+                "/usr/bin/java",
+                f'-Xmx4096M',
+                f'-Xms512M',
+                "-jar", "server.jar",
+                "nogui"
+            ],
+            cwd="/test/directory"
         )
-        mock_exists.assert_called_with("/opt/minecraft/server/eula.txt")
+
+    def test_if_server_is_NOT_initalized_we_get_an_error(self, mocker, administrator, mock_subprocess_run,
+                                                         mock_exists):
+        administrator.is_initialize = False
+
+        with pytest.raises(Exception) as exception:
+            administrator.first_launch()
+
+        assert str(exception.value) == "Server is not initialized"
+
+    # TODO: break things out
+    # * for each of these tests we're having to mock a lot of stuff. this seems like a good case for
+    # * Breaking some of the concepts out into their own modules so they can be tested on their own and
+    # * mocked out wholesale.
+    def test_can_update_eula(self):
+        pass

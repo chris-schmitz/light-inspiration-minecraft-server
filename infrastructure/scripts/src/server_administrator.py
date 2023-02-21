@@ -15,9 +15,12 @@ class ServerAdministrator:
         self.max_memory = max_memory
         self.min_memory = min_memory
 
+        self.is_initialize = False
+
     def initialize_server(self):
         self._build_directory_structure()
         self._download_server()
+        self.is_initialize = True
 
     def start_server(self):
         #     ! fire the command
@@ -35,9 +38,8 @@ class ServerAdministrator:
     def _build_directory_structure(self):
         try:
             makedirs(self.directory, 0o755)
-        except Exception as e:
-            if str(e) != "Directory already exists.":
-                raise e
+        except FileExistsError as e:
+            pass
 
     def _download_server(self):
         urllib.request.urlretrieve(
@@ -46,9 +48,27 @@ class ServerAdministrator:
         )
 
     def first_launch(self):
-        subprocess.call("java -Xmx2048M -Xms1024M -jar server.jar nogui")
+        if self.is_initialize:
+            subprocess.run(
+                [
+                    "/usr/bin/java",
+                    f'-Xmx{self.max_memory}M',
+                    f'-Xms{self.min_memory}M',
+                    "-jar", "server.jar",
+                    "nogui"
+                ],
+                cwd=self.directory
+            )
+
+        else:
+            raise Exception("Server is not initialized")
 
 
 if __name__ == "__main__":
-    administrator = ServerAdministrator("minecraft", "/Users/cschmitz/Desktop/deleteme/", 12345, 1024, 1024)
+    administrator = ServerAdministrator(minecraft_user="minecraft",
+                                        directory="/Users/cschmitz/Desktop/opt/minecraft/server",
+                                        port=25565,
+                                        max_memory=2048,
+                                        min_memory=1024)
     administrator.initialize_server()
+    administrator.first_launch()
