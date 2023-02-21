@@ -1,24 +1,28 @@
 import subprocess
 import urllib.request
-from os import makedirs, path
+from os import path, makedirs
 
 import psutil
+
+from directory_builder import DirectoryBuilder
 
 
 class ServerAdministrator:
     START_SERVER_COMMAND = 'sudo su minecraft -c "cd /opt/minecraft/server && java -Xmx1024M -Xms1024M -jar server.jar nogui"'
 
-    def __init__(self, minecraft_user: str, directory: str, port: int, max_memory: int, min_memory: int):
+    def __init__(self, minecraft_user: str, directory: str, port: int, max_memory: int, min_memory: int,
+                 directory_tool):
         self.user = minecraft_user
         self.directory = directory
         self.port = port
         self.max_memory = max_memory
         self.min_memory = min_memory
+        self.directory_builder = DirectoryBuilder(directory_tool)
 
         self.is_initialize = False
 
     def initialize_server(self):
-        self._build_directory_structure()
+        self.directory_builder.build_directory_structure(self.directory)
         self._download_server()
         self.is_initialize = True
 
@@ -34,12 +38,6 @@ class ServerAdministrator:
             return process_on_target_port[0].pid
         else:
             return None
-
-    def _build_directory_structure(self):
-        try:
-            makedirs(self.directory, 0o755)
-        except FileExistsError as e:
-            pass
 
     def _download_server(self):
         urllib.request.urlretrieve(
@@ -69,6 +67,8 @@ if __name__ == "__main__":
                                         directory="/Users/cschmitz/Desktop/opt/minecraft/server",
                                         port=25565,
                                         max_memory=2048,
-                                        min_memory=1024)
+                                        min_memory=1024,
+                                        directory_tool=makedirs
+                                        )
     administrator.initialize_server()
     administrator.first_launch()

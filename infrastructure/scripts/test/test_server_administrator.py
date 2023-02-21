@@ -35,13 +35,14 @@ class Fixtures:
         return mock
 
     @pytest.fixture(autouse=True)
-    def administrator(self):
+    def administrator(self, mock_makedirs):
         return ServerAdministrator(
             minecraft_user="minecraft",
             directory="/opt/minecraft/server",
             port=25565,
             max_memory=1024,
-            min_memory=1024
+            min_memory=1024,
+            directory_tool=mock_makedirs
         )
 
 
