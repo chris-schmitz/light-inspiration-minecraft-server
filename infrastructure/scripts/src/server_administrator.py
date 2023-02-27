@@ -4,24 +4,22 @@ from os import path, makedirs
 
 import psutil
 
-from directory_builder import DirectoryBuilder
-
 
 class ServerAdministrator:
     START_SERVER_COMMAND = 'sudo su minecraft -c "cd /opt/minecraft/server && java -Xmx1024M -Xms1024M -jar server.jar nogui"'
 
     def __init__(self, minecraft_user: str, directory: str, port: int, max_memory: int, min_memory: int,
-                 directory_tool):
-        self.user = minecraft_user
-        self.directory = directory
+                 directory_builder):
         self.port = port
+        self.directory = directory
+        self.user = minecraft_user
         self.max_memory = max_memory
         self.min_memory = min_memory
-        self.directory_builder = DirectoryBuilder(directory_tool)
-
+        self.directory_builder = directory_builder
         self.is_initialize = False
 
     def initialize_server(self):
+
         self.directory_builder.build_directory_structure(self.directory)
         self._download_server()
         self.is_initialize = True

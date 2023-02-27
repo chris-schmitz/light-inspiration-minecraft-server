@@ -42,7 +42,7 @@ class Fixtures:
             port=25565,
             max_memory=1024,
             min_memory=1024,
-            directory_tool=mock_makedirs
+            directory_builder=mock_makedirs
         )
 
 
@@ -50,8 +50,8 @@ class TestRunner(Fixtures):
     def test_can_build_minecraft_directory_structure(self, administrator, mock_makedirs, mock_urlretrieve):
         administrator.initialize_server()
 
-        mock_makedirs.assert_called_with(administrator.directory, 0o755)
-        assert administrator.is_initialize == True
+        mock_makedirs.build_directory_structure.assert_called_with(administrator.directory)
+        assert administrator.is_initialize is True
 
     def test_if_directory_already_exists_the_directory_already_exists_exception_is_suppressed(self, administrator,
                                                                                               mock_makedirs,
@@ -60,7 +60,7 @@ class TestRunner(Fixtures):
 
         administrator.initialize_server()
 
-        mock_makedirs.assert_called_with(administrator.directory, 0o755)
+        mock_makedirs.build_directory_structure.assert_called_with(administrator.directory)
         assert administrator.is_initialize is True
 
     def test_can_download_the_server_jar(self, administrator, mock_makedirs, mock_urlretrieve):
