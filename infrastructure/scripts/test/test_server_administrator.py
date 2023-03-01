@@ -3,24 +3,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from infrastructure.scripts.src.server_administrator import ServerAdministrator
+from infrastructure.scripts.src.server_administrator import ServerAdministrator, ServerConfiguration
 
 
 class Fixtures:
     @pytest.fixture
-    def mock_makedirs(self, mocker):
+    def mock_directory_builder(self, mocker):
         mock = MagicMock()
-        mocker.patch("infrastructure.scripts.src.server_administrator.makedirs", mock)
-        return mock
-
-    # ! Note what's happening here
-    # - We're creating a mock object
-    # - we're replacing the object at the end of the path with that mock.
-    # * This by itself is enough to faciltat
-    @pytest.fixture
-    def mock_exists(self, mocker):
-        mock = MagicMock()
-        mocker.patch("os.path.exists", mock)
+        mocker.patch("directory_builder.DirectoryBuilder", mock)
         return mock
 
     @pytest.fixture
@@ -35,35 +25,26 @@ class Fixtures:
         return mock
 
     @pytest.fixture(autouse=True)
-    def administrator(self, mock_makedirs):
+    def administrator(self, mock_directory_builder, server_configuration):
         return ServerAdministrator(
+            config=server_configuration,
+            directory_builder=mock_directory_builder
+        )
+
+    @pytest.fixture
+    def server_configuration(self):
+        return ServerConfiguration(
             minecraft_user="minecraft",
             directory="/opt/minecraft/server",
             port=25565,
             max_memory=1024,
             min_memory=1024,
-            directory_builder=mock_makedirs
         )
 
 
 class TestRunner(Fixtures):
-    def test_can_build_minecraft_directory_structure(self, administrator, mock_makedirs, mock_urlretrieve):
-        administrator.initialize_server()
 
-        mock_makedirs.build_directory_structure.assert_called_with(administrator.directory)
-        assert administrator.is_initialize is True
-
-    def test_if_directory_already_exists_the_directory_already_exists_exception_is_suppressed(self, administrator,
-                                                                                              mock_makedirs,
-                                                                                              mock_urlretrieve):
-        mock_makedirs.side_effect = FileExistsError("Directory already exists.")
-
-        administrator.initialize_server()
-
-        mock_makedirs.build_directory_structure.assert_called_with(administrator.directory)
-        assert administrator.is_initialize is True
-
-    def test_can_download_the_server_jar(self, administrator, mock_makedirs, mock_urlretrieve):
+    def test_can_download_the_server_jar(self, administrator, mock_urlretrieve):
         administrator.initialize_server()
 
         urllib.request.urlretrieve.assert_called_with(
@@ -71,8 +52,7 @@ class TestRunner(Fixtures):
             filename="/opt/minecraft/server/server.jar"
         )
 
-    def test_if_server_is_initalized_can_perform_initial_launch(self, mocker, administrator, mock_subprocess_run,
-                                                                mock_exists):
+    def test_if_server_is_initalized_can_perform_initial_launch(self, administrator, mock_subprocess_run):
         administrator.max_memory = 4096
         administrator.min_memory = 512
         administrator.directory = "/test/directory"
@@ -92,8 +72,7 @@ class TestRunner(Fixtures):
             cwd="/test/directory"
         )
 
-    def test_if_server_is_NOT_initalized_we_get_an_error(self, mocker, administrator, mock_subprocess_run,
-                                                         mock_exists):
+    def test_if_server_is_NOT_initalized_we_get_an_error(self, administrator, mock_subprocess_run):
         administrator.is_initialize = False
 
         with pytest.raises(Exception) as exception:

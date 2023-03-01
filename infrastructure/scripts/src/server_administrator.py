@@ -1,20 +1,34 @@
 import subprocess
 import urllib.request
+from dataclasses import dataclass
 from os import path, makedirs
 
 import psutil
 
+from directory_builder import DirectoryBuilder
 
-class ServerAdministrator:
-    START_SERVER_COMMAND = 'sudo su minecraft -c "cd /opt/minecraft/server && java -Xmx1024M -Xms1024M -jar server.jar nogui"'
 
-    def __init__(self, minecraft_user: str, directory: str, port: int, max_memory: int, min_memory: int,
-                 directory_builder):
-        self.port = port
+@dataclass
+class ServerConfiguration:
+    def __init__(self, minecraft_user, directory, port, max_memory, min_memory):
+        self.minecraft_user = minecraft_user
         self.directory = directory
-        self.user = minecraft_user
+        self.port = port
         self.max_memory = max_memory
         self.min_memory = min_memory
+
+
+class ServerAdministrator:
+
+    def __init__(self, config: ServerConfiguration, directory_builder: DirectoryBuilder):
+        # TODO: consider refactor
+        # * consider storing all of the configs as the server config object instead of breaking
+        # * them all out into individual properties
+        self.port = config.port
+        self.directory = config.directory
+        self.user = config.minecraft_user
+        self.max_memory = config.max_memory
+        self.min_memory = config.min_memory
         self.directory_builder = directory_builder
         self.is_initialize = False
 
@@ -61,12 +75,13 @@ class ServerAdministrator:
 
 
 if __name__ == "__main__":
-    administrator = ServerAdministrator(minecraft_user="minecraft",
-                                        directory="/Users/cschmitz/Desktop/opt/minecraft/server",
-                                        port=25565,
-                                        max_memory=2048,
-                                        min_memory=1024,
-                                        directory_tool=makedirs
-                                        )
+    config = ServerConfiguration(
+        minecraft_user="minecraft",
+        directory="/Users/cschmitz/Desktop/opt/minecraft/server",
+        port=25565,
+        max_memory=2048,
+        min_memory=1024)
+    directory_builder = DirectoryBuilder(makedirs)
+    administrator = ServerAdministrator(config, directory_builder)
     administrator.initialize_server()
     administrator.first_launch()
