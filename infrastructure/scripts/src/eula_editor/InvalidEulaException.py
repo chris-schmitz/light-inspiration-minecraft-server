@@ -1,0 +1,2 @@
+class InvalidEulaException(Exception):
+    pass

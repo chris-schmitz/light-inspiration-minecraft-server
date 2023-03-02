@@ -3,46 +3,16 @@ import re
 
 import pytest
 
-
-# TODO: move out to src exception
-class InvalidEulaException(Exception):
-    pass
+from eula_editor.EulaEditor import EulaEditor
+from eula_editor.InvalidEulaException import InvalidEulaException
 
 
-# TODO: move out to src module
-class EulaEditor:
-    def __init__(self, eula_relative_path: str):
-        self.eula_path = eula_relative_path
-        self.eula_lines: list[str]
-        self._read_in_eula()
-        self._validate_eula()
-
-    def _validate_eula(self):
-        self._get_eula_agreement_state_line()
-
-    def requires_edit(self) -> bool:
-        eula_agreement_state = self._get_eula_agreement_state_line()
-
-        if re.search("=\s?false", eula_agreement_state):
-            return True
-        else:
-            return False
-
-    def _get_eula_agreement_state_line(self) -> str:
-        try:
-            return [line for line in self.eula_lines if re.search("^eula\s?=", line)][0]
-        except IndexError:
-            raise InvalidEulaException
-
-    def _read_in_eula(self):
-        with open(self.eula_path, "r") as eula:
-            self.eula_lines = eula.readlines()
-
-
+# * Note: EULA == End User License Agreement
+# * It's a text file that mojang creates the first time the server launches
 class TestRunner:
     EULA_FILE_PATH = "./resources/eula.txt"
 
-    @pytest.fixture
+    @pytest.fixture(autouse=True)
     def before_and_after_each(self):
         yield
         os.remove(self.EULA_FILE_PATH)
@@ -52,7 +22,7 @@ class TestRunner:
 
         editor = EulaEditor(self.EULA_FILE_PATH)
 
-        assert editor.requires_edit() is True
+        assert editor.requires_state_update() is True
 
     def test_if_file_is_not_valid_eula_expect_exception(self):
         self.create_eula_file(["some text that isn't the eula state"])
@@ -60,9 +30,15 @@ class TestRunner:
         with pytest.raises(InvalidEulaException):
             EulaEditor(self.EULA_FILE_PATH)
 
-    @pytest.mark.skip(reason="next test")
     def test_can_update_eula_state(self):
-        pass
+        self.create_eula_file(["eula = false"])
+        editor = EulaEditor(self.EULA_FILE_PATH)
+
+        editor.update_state()
+
+        with open(self.EULA_FILE_PATH) as eula:
+            last_line = eula.readlines()[-1]
+            assert re.match("^eula\s?=\s?true", last_line)
 
     def create_eula_file(self, additional_lines: list[str]):
         with open(self.EULA_FILE_PATH, "w") as eula:
