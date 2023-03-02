@@ -13,9 +13,12 @@ class TestRunner:
     EULA_FILE_PATH = "./resources/eula.txt"
 
     @pytest.fixture(autouse=True)
-    def before_and_after_each(self):
-        yield
-        os.remove(self.EULA_FILE_PATH)
+    def before_and_after_each(self, request):
+        if 'disable_auto_use_setting' in request.keywords:
+            yield
+        else:
+            yield
+            os.remove(self.EULA_FILE_PATH)
 
     def test_can_confirm_eula_needs_update(self):
         self.create_eula_file(["eula = false"])
@@ -39,6 +42,11 @@ class TestRunner:
         with open(self.EULA_FILE_PATH) as eula:
             last_line = eula.readlines()[-1]
             assert re.match("^eula\s?=\s?true", last_line)
+
+    @pytest.mark.disable_auto_use_setting
+    def test_exception_raised_if_file_doesnt_exist(self):
+        with pytest.raises(FileNotFoundError) as exception:
+            EulaEditor("/some/path/that/is/not/the/eula/file")
 
     def create_eula_file(self, additional_lines: list[str]):
         with open(self.EULA_FILE_PATH, "w") as eula:
