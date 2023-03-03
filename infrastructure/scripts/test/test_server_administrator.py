@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from eula_editor.EulaEditor import EulaEditor
 from infrastructure.scripts.src.server_administrator import ServerAdministrator, ServerConfiguration
 
 
@@ -24,11 +25,17 @@ class Fixtures:
         mocker.patch("subprocess.run", mock)
         return mock
 
+    @pytest.fixture
+    def mock_eula_editor(self, mocker):
+        editor = EulaEditor("some/path")
+        return editor
+
     @pytest.fixture(autouse=True)
-    def administrator(self, mock_directory_builder, server_configuration):
+    def administrator(self, mock_directory_builder, server_configuration, mock_eula_editor):
         return ServerAdministrator(
             config=server_configuration,
-            directory_builder=mock_directory_builder
+            directory_builder=mock_directory_builder,
+            eula_editor=mock_eula_editor
         )
 
     @pytest.fixture
@@ -44,6 +51,7 @@ class Fixtures:
 
 class TestRunner(Fixtures):
 
+    # todo: consider abstracting
     def test_can_download_the_server_jar(self, administrator, mock_urlretrieve):
         administrator.initialize_server()
 
@@ -58,7 +66,7 @@ class TestRunner(Fixtures):
         administrator.directory = "/test/directory"
         administrator.port = 5555
         administrator.user = "testuser"
-        administrator.is_initialize = True
+        administrator.can_launch_minecraft_server = True
         administrator.first_launch()
 
         mock_subprocess_run.assert_called_with(
@@ -73,16 +81,17 @@ class TestRunner(Fixtures):
         )
 
     def test_if_server_is_NOT_initalized_we_get_an_error(self, administrator, mock_subprocess_run):
-        administrator.is_initialize = False
+        administrator.can_launch_minecraft_server = False
 
         with pytest.raises(Exception) as exception:
             administrator.first_launch()
 
         assert str(exception.value) == "Server is not initialized"
 
-    # TODO: break things out
-    # * for each of these tests we're having to mock a lot of stuff. this seems like a good case for
-    # * Breaking some of the concepts out into their own modules so they can be tested on their own and
-    # * mocked out wholesale.
-    def test_can_update_eula(self):
-        pass
+    def test_can_update_eula(self, administrator, mock_eula_editor, mocker):
+        mocker.patch.object(mock_eula_editor, "requires_state_update", return_value=True)
+        mocker.patch.object(mock_eula_editor, "update_state")
+
+        administrator.initialize_server()
+
+        mock_eula_editor.update_state.assert_called()

@@ -10,9 +10,6 @@ class EulaEditor:
         self._read_in_eula()
         self._validate_eula()
 
-    def _validate_eula(self):
-        self._get_eula_agreement_state_line()
-
     def requires_state_update(self) -> bool:
         eula_agreement_state = self._get_eula_agreement_state_line()
 
@@ -20,6 +17,13 @@ class EulaEditor:
             return True
         else:
             return False
+
+    def update_state(self):
+        self.eula_lines[-1] = "eula = true"
+        self._write_lines_to_eula_file()
+
+    def _validate_eula(self):
+        self._get_eula_agreement_state_line()
 
     def _get_eula_agreement_state_line(self) -> str:
         try:
@@ -31,9 +35,6 @@ class EulaEditor:
         with open(self.eula_path, "r") as eula:
             self.eula_lines = eula.readlines()
 
-    def update_state(self):
-        self.eula_lines[-1] = "eula = true"
-        self._write_lines_to_eula_file()
 
     def _write_lines_to_eula_file(self):
         with open(self.eula_path, "w") as file:

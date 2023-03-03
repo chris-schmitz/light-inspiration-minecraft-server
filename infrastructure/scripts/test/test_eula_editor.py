@@ -45,7 +45,7 @@ class TestRunner:
 
     @pytest.mark.disable_auto_use_setting
     def test_exception_raised_if_file_doesnt_exist(self):
-        with pytest.raises(FileNotFoundError) as exception:
+        with pytest.raises(FileNotFoundError):
             EulaEditor("/some/path/that/is/not/the/eula/file")
 
     def create_eula_file(self, additional_lines: list[str]):

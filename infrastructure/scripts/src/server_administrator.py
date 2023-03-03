@@ -1,11 +1,10 @@
 import subprocess
 import urllib.request
 from dataclasses import dataclass
-from os import path, makedirs
-
-import psutil
+from os import makedirs
 
 from directory_builder import DirectoryBuilder
+from eula_editor.EulaEditor import EulaEditor
 
 
 @dataclass
@@ -20,23 +19,26 @@ class ServerConfiguration:
 
 class ServerAdministrator:
 
-    def __init__(self, config: ServerConfiguration, directory_builder: DirectoryBuilder):
+    def __init__(self, config: ServerConfiguration, directory_builder: DirectoryBuilder, eula_editor: EulaEditor):
         # TODO: consider refactor
         # * consider storing all of the configs as the server config object instead of breaking
         # * them all out into individual properties
+        self.directory_builder = directory_builder
+        self.eula_editor = eula_editor
+
         self.port = config.port
         self.directory = config.directory
         self.user = config.minecraft_user
         self.max_memory = config.max_memory
         self.min_memory = config.min_memory
-        self.directory_builder = directory_builder
-        self.is_initialize = False
+
+        self.can_launch_minecraft_server = False
 
     def initialize_server(self):
 
         self.directory_builder.build_directory_structure(self.directory)
         self._download_server()
-        self.is_initialize = True
+        self.can_launch_minecraft_server = True
 
     def start_server(self):
         #     ! fire the command
@@ -58,7 +60,7 @@ class ServerAdministrator:
         )
 
     def first_launch(self):
-        if self.is_initialize:
+        if self.can_launch_minecraft_server:
             subprocess.run(
                 [
                     "/usr/bin/java",
