@@ -3,8 +3,8 @@ import re
 
 import pytest
 
-from eula_editor.EulaEditor import EulaEditor
 from eula_editor.InvalidEulaException import InvalidEulaException
+from eula_editor.editor import EulaEditor
 
 
 # * Note: EULA == End User License Agreement

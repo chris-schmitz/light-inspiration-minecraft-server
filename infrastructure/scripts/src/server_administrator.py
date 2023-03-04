@@ -1,10 +1,10 @@
 import subprocess
 import urllib.request
 from dataclasses import dataclass
-from os import makedirs
+from os import makedirs, path
 
 from directory_builder import DirectoryBuilder
-from eula_editor.EulaEditor import EulaEditor
+from eula_editor.editor import EulaEditor
 
 
 @dataclass
@@ -35,10 +35,13 @@ class ServerAdministrator:
         self.can_launch_minecraft_server = False
 
     def initialize_server(self):
-
         self.directory_builder.build_directory_structure(self.directory)
         self._download_server()
+        # TODO: consider, do we really need this??
         self.can_launch_minecraft_server = True
+        self.first_launch()
+        if self.eula_editor.requires_state_update():
+            self.eula_editor.update_state()
 
     def start_server(self):
         #     ! fire the command

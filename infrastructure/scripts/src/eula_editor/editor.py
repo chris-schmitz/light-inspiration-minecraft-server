@@ -35,7 +35,6 @@ class EulaEditor:
         with open(self.eula_path, "r") as eula:
             self.eula_lines = eula.readlines()
 
-
     def _write_lines_to_eula_file(self):
         with open(self.eula_path, "w") as file:
             file.writelines(self.eula_lines)

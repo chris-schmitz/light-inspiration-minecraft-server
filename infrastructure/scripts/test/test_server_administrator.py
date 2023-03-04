@@ -1,9 +1,8 @@
 import urllib
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, create_autospec
 
 import pytest
 
-from eula_editor.EulaEditor import EulaEditor
 from infrastructure.scripts.src.server_administrator import ServerAdministrator, ServerConfiguration
 
 
@@ -26,9 +25,10 @@ class Fixtures:
         return mock
 
     @pytest.fixture
-    def mock_eula_editor(self, mocker):
-        editor = EulaEditor("some/path")
-        return editor
+    def mock_eula_editor(self):
+        from eula_editor.editor import EulaEditor
+        mock_editor = create_autospec(EulaEditor)
+        return mock_editor("")
 
     @pytest.fixture(autouse=True)
     def administrator(self, mock_directory_builder, server_configuration, mock_eula_editor):
@@ -52,7 +52,7 @@ class Fixtures:
 class TestRunner(Fixtures):
 
     # todo: consider abstracting
-    def test_can_download_the_server_jar(self, administrator, mock_urlretrieve):
+    def test_can_download_the_server_jar(self, administrator, mock_urlretrieve, mock_eula_editor, mock_subprocess_run):
         administrator.initialize_server()
 
         urllib.request.urlretrieve.assert_called_with(
@@ -88,9 +88,17 @@ class TestRunner(Fixtures):
 
         assert str(exception.value) == "Server is not initialized"
 
-    def test_can_update_eula(self, administrator, mock_eula_editor, mocker):
+    # TODO: rewrite eula editor
+    # * this passes, but tbh it's not actually what we want. With the eula editor we read in the file at init which we
+    # * can't do if we're dependency injecting the editor class b/c the file hasn't been created yet. Then we're adding
+    # * tools for checking if the file needs to be updated which I don't know if we actually need.
+    # * Seems like what we should do is:
+    # - init editor class without the path and without auto-reading
+    # - have a method "update_eula("/path")" that orchestrates the editor
+    # - the update method either edits the file successfully or raises an exception
+    # * this way we can still use some of the validation logic, it would just be private to the class
+    def test_can_update_eula(self, administrator, mock_eula_editor, mock_urlretrieve, mock_subprocess_run, mocker):
         mocker.patch.object(mock_eula_editor, "requires_state_update", return_value=True)
-        mocker.patch.object(mock_eula_editor, "update_state")
 
         administrator.initialize_server()
 
