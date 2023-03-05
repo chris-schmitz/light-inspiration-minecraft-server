@@ -66,7 +66,6 @@ class TestRunner(Fixtures):
         administrator.directory = "/test/directory"
         administrator.port = 5555
         administrator.user = "testuser"
-        administrator.can_launch_minecraft_server = True
         administrator.first_launch()
 
         mock_subprocess_run.assert_called_with(
@@ -81,25 +80,13 @@ class TestRunner(Fixtures):
         )
 
     def test_if_server_is_NOT_initalized_we_get_an_error(self, administrator, mock_subprocess_run):
-        administrator.can_launch_minecraft_server = False
-
+        mock_subprocess_run.side_effect = Exception("Server is not initialized")
         with pytest.raises(Exception) as exception:
             administrator.first_launch()
 
         assert str(exception.value) == "Server is not initialized"
 
-    # TODO: rewrite eula editor
-    # * this passes, but tbh it's not actually what we want. With the eula editor we read in the file at init which we
-    # * can't do if we're dependency injecting the editor class b/c the file hasn't been created yet. Then we're adding
-    # * tools for checking if the file needs to be updated which I don't know if we actually need.
-    # * Seems like what we should do is:
-    # - init editor class without the path and without auto-reading
-    # - have a method "update_eula("/path")" that orchestrates the editor
-    # - the update method either edits the file successfully or raises an exception
-    # * this way we can still use some of the validation logic, it would just be private to the class
     def test_can_update_eula(self, administrator, mock_eula_editor, mock_urlretrieve, mock_subprocess_run, mocker):
-        mocker.patch.object(mock_eula_editor, "requires_state_update", return_value=True)
-
         administrator.initialize_server()
 
-        mock_eula_editor.update_state.assert_called()
+        mock_eula_editor.update_state.assert_called_with("/opt/minecraft/server/eula.txt")

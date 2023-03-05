@@ -3,6 +3,8 @@ import urllib.request
 from dataclasses import dataclass
 from os import makedirs, path
 
+import psutil
+
 from directory_builder import DirectoryBuilder
 from eula_editor.editor import EulaEditor
 
@@ -32,16 +34,19 @@ class ServerAdministrator:
         self.max_memory = config.max_memory
         self.min_memory = config.min_memory
 
-        self.can_launch_minecraft_server = False
-
+    # TODO: consider refactor or rename
+    # ? Should this really be an initialization?? is there going to be some condition outside
+    # ? of this where we'd decide to do anything other than launching the server outside of a
+    # ? raised exception that would blow everything up anyway??
+    # * I feel like we can come back and refactor this to be "build and run server" or just "launch"
+    # * or something like that. Any deviation from launching would just be an exception that we'd be
+    # * looking to the error logs to troubleshoot anyway
     def initialize_server(self):
         self.directory_builder.build_directory_structure(self.directory)
         self._download_server()
-        # TODO: consider, do we really need this??
-        self.can_launch_minecraft_server = True
         self.first_launch()
-        if self.eula_editor.requires_state_update():
-            self.eula_editor.update_state()
+        self.eula_editor.update_state(f"{self.directory}/eula.txt")
+        # self.full_launch()
 
     def start_server(self):
         #     ! fire the command
@@ -63,20 +68,16 @@ class ServerAdministrator:
         )
 
     def first_launch(self):
-        if self.can_launch_minecraft_server:
-            subprocess.run(
-                [
-                    "/usr/bin/java",
-                    f'-Xmx{self.max_memory}M',
-                    f'-Xms{self.min_memory}M',
-                    "-jar", "server.jar",
-                    "nogui"
-                ],
-                cwd=self.directory
-            )
-
-        else:
-            raise Exception("Server is not initialized")
+        subprocess.run(
+            [
+                "/usr/bin/java",
+                f'-Xmx{self.max_memory}M',
+                f'-Xms{self.min_memory}M',
+                "-jar", "server.jar",
+                "nogui"
+            ],
+            cwd=self.directory
+        )
 
 
 if __name__ == "__main__":

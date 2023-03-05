@@ -1,40 +1,45 @@
 import re
+from typing import List
 
 from eula_editor.InvalidEulaException import InvalidEulaException
 
 
+class StateLineInformation:
+    def __init__(self, state_line: str, line_index_in_file: int):
+        self.text = state_line
+        self.line_index_in_file = line_index_in_file
+
+
 class EulaEditor:
-    def __init__(self, eula_relative_path: str):
-        self.eula_path = eula_relative_path
-        self.eula_lines: list[str]
-        self._read_in_eula()
-        self._validate_eula()
+    def update_state(self, path: str):
+        lines = self._read_in_eula(path)
+        updated_lines = self._set_eula_state_to_true(lines)
+        self._write_lines_to_eula_file(path, updated_lines)
 
-    def requires_state_update(self) -> bool:
-        eula_agreement_state = self._get_eula_agreement_state_line()
+    def _set_eula_state_to_true(self, lines):
+        state_line = self._get_eula_agreement_state_line(lines)
+        state_line.text = "eula = true"
+        lines[state_line.line_index_in_file] = state_line.text
+        return lines
 
-        if re.search("=\s?false", eula_agreement_state):
-            return True
+    @staticmethod
+    def _get_eula_agreement_state_line(lines: List[str]) -> StateLineInformation:
+        state_line_info = None
+        for index, line in enumerate(lines):
+            if re.search("^eula\s?=", line):
+                state_line_info = StateLineInformation(line, index)
+
+        if state_line_info is not None:
+            return state_line_info
         else:
-            return False
-
-    def update_state(self):
-        self.eula_lines[-1] = "eula = true"
-        self._write_lines_to_eula_file()
-
-    def _validate_eula(self):
-        self._get_eula_agreement_state_line()
-
-    def _get_eula_agreement_state_line(self) -> str:
-        try:
-            return [line for line in self.eula_lines if re.search("^eula\s?=", line)][0]
-        except IndexError:
             raise InvalidEulaException
 
-    def _read_in_eula(self):
-        with open(self.eula_path, "r") as eula:
-            self.eula_lines = eula.readlines()
+    @staticmethod
+    def _read_in_eula(path: str) -> List[str]:
+        with open(path, "r") as eula:
+            return eula.readlines()
 
-    def _write_lines_to_eula_file(self):
-        with open(self.eula_path, "w") as file:
-            file.writelines(self.eula_lines)
+    @staticmethod
+    def _write_lines_to_eula_file(path: str, lines: List[str]):
+        with open(path, "w") as file:
+            file.writelines(lines)
