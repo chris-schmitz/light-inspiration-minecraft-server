@@ -26,7 +26,7 @@ class Fixtures:
 
     @pytest.fixture
     def mock_eula_editor(self):
-        from eula_editor.editor import EulaEditor
+        from editor import EulaEditor
         mock_editor = create_autospec(EulaEditor)
         return mock_editor("")
 

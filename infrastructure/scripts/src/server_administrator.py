@@ -4,10 +4,8 @@ import urllib.request
 from dataclasses import dataclass
 from os import makedirs, path
 
-import psutil
-
 from directory_builder import DirectoryBuilder
-from eula_editor.editor import EulaEditor
+from editor import EulaEditor
 
 
 @dataclass
@@ -31,26 +29,23 @@ class ServerAdministrator:
         self.directory_builder.build_directory_structure(self.server_config.directory)
         self._download_server()
         self._launch_jar()
-        time.sleep(5)
+        # TODO: consider abstracting
+        # * the sleep time to a util function that gets injected so you can mock it and speed up the tests cases
+        time.sleep(5)  # ! Not really the most elegant way of giving initial launch time to run, but this _is_ a demo :|
         self.eula_editor.update_state(f"{self.server_config.directory}/eula.txt")
         self._launch_jar()
 
-    @staticmethod
-    def _get_minecraft_server_process_id(self):
-        process_on_target_port = list(
-            filter(lambda connection: connection.laddr.port == 25565, psutil.net_connections()))
-        if len(process_on_target_port) > 0:
-            return process_on_target_port[0].pid
-        else:
-            return None
-
+    # TODO: yeah prob best to pull this out into it's own class
     def _download_server(self):
         urllib.request.urlretrieve(
+            # ! really, this url should be parameterized, maybe pull in from an ENV var? but again, just a demo
             url="https://piston-data.mojang.com/v1/objects/c9df48efed58511cdd0213c56b9013a7b5c9ac1f/server.jar",
             filename=path.join(self.server_config.directory, "server.jar")
         )
 
     def _launch_jar(self):
+        # ! also note that if this was a real server build'n launch util we'd be creating a new user, su-ing into that
+        # ! user account, and running as the user, but again again, demo.
         subprocess.run(
             [
                 "/usr/bin/java",
@@ -63,6 +58,7 @@ class ServerAdministrator:
         )
 
 
+# TODO: move this to a stand alone launcher file
 if __name__ == "__main__":
     print("===> Building and launching Minecraft server <===")
     config = ServerConfiguration(
