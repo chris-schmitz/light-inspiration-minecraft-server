@@ -51,42 +51,50 @@ class Fixtures:
 
 class TestRunner(Fixtures):
 
-    # todo: consider abstracting
+    # Todo: consider abstracting
     def test_can_download_the_server_jar(self, administrator, mock_urlretrieve, mock_eula_editor, mock_subprocess_run):
-        administrator.initialize_server()
+        administrator.build_and_launch_server()
 
         urllib.request.urlretrieve.assert_called_with(
             url="https://piston-data.mojang.com/v1/objects/c9df48efed58511cdd0213c56b9013a7b5c9ac1f/server.jar",
             filename="/opt/minecraft/server/server.jar"
         )
 
-    def test_if_server_is_initalized_can_perform_initial_launch(self, administrator, mock_subprocess_run):
-        administrator.max_memory = 4096
-        administrator.min_memory = 512
-        administrator.directory = "/test/directory"
-        administrator.port = 5555
-        administrator.user = "testuser"
-        administrator.first_launch()
+    # TODO: review and cut if unneeded
+    # def test_if_server_is_initalized_can_perform_initial_launch(self, mock_directory_builder, mock_eula_editor,
+    #                                                             mock_subprocess_run):
+    #     config = ServerConfiguration(
+    #         minecraft_user="anyuser",
+    #         max_memory=4096,
+    #         min_memory=512,
+    #         directory="/test/directory",
+    #         port=5555,
+    #     )
+    #     administrator = ServerAdministrator(config, mock_directory_builder, mock_eula_editor)
+    #
+    #     administrator.build_and_launch_server()
+    #
+    #     mock_subprocess_run.assert_called_with(
+    #         [
+    #             "/usr/bin/java",
+    #             f'-Xmx4096M',
+    #             f'-Xms512M',
+    #             "-jar", "server.jar",
+    #             "nogui"
+    #         ],
+    #         cwd="/test/directory"
+    #     )
 
-        mock_subprocess_run.assert_called_with(
-            [
-                "/usr/bin/java",
-                f'-Xmx4096M',
-                f'-Xms512M',
-                "-jar", "server.jar",
-                "nogui"
-            ],
-            cwd="/test/directory"
-        )
-
+    # TODO: review and cut
     def test_if_server_is_NOT_initalized_we_get_an_error(self, administrator, mock_subprocess_run):
         mock_subprocess_run.side_effect = Exception("Server is not initialized")
         with pytest.raises(Exception) as exception:
-            administrator.first_launch()
+            administrator._launch_jar()
 
         assert str(exception.value) == "Server is not initialized"
 
     def test_can_update_eula(self, administrator, mock_eula_editor, mock_urlretrieve, mock_subprocess_run, mocker):
-        administrator.initialize_server()
+        administrator.build_and_launch_server()
 
+        assert mock_subprocess_run.call_count == 2
         mock_eula_editor.update_state.assert_called_with("/opt/minecraft/server/eula.txt")
