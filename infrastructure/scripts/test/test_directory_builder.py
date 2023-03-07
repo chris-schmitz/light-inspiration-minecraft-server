@@ -3,7 +3,7 @@ from os import makedirs, path
 
 import pytest
 
-from directory_builder import DirectoryBuilder
+from server_administrator.directory_builder import DirectoryBuilder
 
 
 class TestRunner:

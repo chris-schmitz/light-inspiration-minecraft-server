@@ -8,6 +8,10 @@ from directory_builder import DirectoryBuilder
 from editor import EulaEditor
 
 
+def seconds_of_sleep(seconds: int):
+    time.sleep(seconds)
+
+
 @dataclass
 class ServerConfiguration:
     def __init__(self, minecraft_user, directory, port, max_memory, min_memory):
@@ -20,18 +24,17 @@ class ServerConfiguration:
 
 class ServerAdministrator:
 
-    def __init__(self, config: ServerConfiguration, directory_builder: DirectoryBuilder, eula_editor: EulaEditor):
+    def __init__(self, config: ServerConfiguration, builder: DirectoryBuilder, editor: EulaEditor, sleeper):
         self.server_config = config
-        self.directory_builder = directory_builder
-        self.eula_editor = eula_editor
+        self.directory_builder = builder
+        self.eula_editor = editor
+        self.seconds_of_sleep = sleeper
 
     def build_and_launch_server(self):
         self.directory_builder.build_directory_structure(self.server_config.directory)
         self._download_server()
         self._launch_jar()
-        # TODO: consider abstracting
-        # * the sleep time to a util function that gets injected so you can mock it and speed up the tests cases
-        time.sleep(5)  # ! Not really the most elegant way of giving initial launch time to run, but this _is_ a demo :|
+        self.seconds_of_sleep(5)
         self.eula_editor.update_state(f"{self.server_config.directory}/eula.txt")
         self._launch_jar()
 
@@ -61,7 +64,7 @@ class ServerAdministrator:
 # TODO: move this to a stand alone launcher file
 if __name__ == "__main__":
     print("===> Building and launching Minecraft server <===")
-    config = ServerConfiguration(
+    configuration = ServerConfiguration(
         minecraft_user="minecraft",
         directory="/Users/cschmitz/Desktop/opt/minecraft/server",
         port=25565,
@@ -69,5 +72,5 @@ if __name__ == "__main__":
         min_memory=1024)
     directory_builder = DirectoryBuilder(makedirs)
     eula_editor = EulaEditor()
-    administrator = ServerAdministrator(config, directory_builder, eula_editor)
+    administrator = ServerAdministrator(configuration, directory_builder, eula_editor, seconds_of_sleep)
     administrator.build_and_launch_server()

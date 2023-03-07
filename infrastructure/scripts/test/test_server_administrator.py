@@ -1,9 +1,9 @@
 import urllib
-from unittest.mock import MagicMock, create_autospec
+from unittest.mock import MagicMock, create_autospec, Mock
 
 import pytest
 
-from infrastructure.scripts.src.server_administrator import ServerAdministrator, ServerConfiguration
+from server_administrator.server_administrator import ServerAdministrator, ServerConfiguration
 
 
 class Fixtures:
@@ -26,16 +26,18 @@ class Fixtures:
 
     @pytest.fixture
     def mock_eula_editor(self):
-        from editor import EulaEditor
+        from server_administrator.editor import EulaEditor
         mock_editor = create_autospec(EulaEditor)
         return mock_editor("")
 
     @pytest.fixture(autouse=True)
     def administrator(self, mock_directory_builder, server_configuration, mock_eula_editor):
+        seconds_of_sleep_mock = Mock()
         return ServerAdministrator(
             config=server_configuration,
-            directory_builder=mock_directory_builder,
-            eula_editor=mock_eula_editor
+            builder=mock_directory_builder,
+            editor=mock_eula_editor,
+            sleeper=seconds_of_sleep_mock
         )
 
     @pytest.fixture
