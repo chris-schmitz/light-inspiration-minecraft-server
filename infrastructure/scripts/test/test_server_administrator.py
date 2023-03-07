@@ -9,6 +9,10 @@ from server_administrator.server_administrator import ServerAdministrator, Serve
 class Fixtures:
 
     @pytest.fixture
+    def mock_seconds_of_sleep(self):
+        return Mock()
+
+    @pytest.fixture
     def mock_urlretrieve(self, mocker):
         mock = MagicMock()
         mocker.patch("urllib.request.urlretrieve", mock)
@@ -32,13 +36,12 @@ class Fixtures:
         return mock_editor("")
 
     @pytest.fixture(autouse=True)
-    def administrator(self, mock_directory_builder, server_configuration, mock_eula_editor):
-        seconds_of_sleep_mock = Mock()
+    def administrator(self, mock_directory_builder, server_configuration, mock_eula_editor, mock_seconds_of_sleep):
         return ServerAdministrator(
             config=server_configuration,
             builder=mock_directory_builder,
             editor=mock_eula_editor,
-            sleeper=seconds_of_sleep_mock
+            sleeper=mock_seconds_of_sleep
         )
 
     @pytest.fixture
@@ -63,40 +66,37 @@ class TestRunner(Fixtures):
             filename="/opt/minecraft/server/server.jar"
         )
 
-    # TODO: review and cut if unneeded
-    # def test_if_server_is_initalized_can_perform_initial_launch(self, mock_directory_builder, mock_eula_editor,
-    #                                                             mock_subprocess_run):
-    #     config = ServerConfiguration(
-    #         minecraft_user="anyuser",
-    #         max_memory=4096,
-    #         min_memory=512,
-    #         directory="/test/directory",
-    #         port=5555,
-    #     )
-    #     administrator = ServerAdministrator(config, mock_directory_builder, mock_eula_editor)
-    #
-    #     administrator.build_and_launch_server()
-    #
-    #     mock_subprocess_run.assert_called_with(
-    #         [
-    #             "/usr/bin/java",
-    #             f'-Xmx4096M',
-    #             f'-Xms512M',
-    #             "-jar", "server.jar",
-    #             "nogui"
-    #         ],
-    #         cwd="/test/directory"
-    #     )
+    def test_can_correctly_launch_minecraft_jar(self, mock_directory_builder, mock_eula_editor,
+                                                mock_subprocess_run, mock_seconds_of_sleep, mock_urlretrieve):
+        config = ServerConfiguration(
+            minecraft_user="anyuser",
+            max_memory=4096,
+            min_memory=512,
+            directory="/test/directory",
+            port=5555,
+        )
+        administrator = ServerAdministrator(config, mock_directory_builder, mock_eula_editor, mock_seconds_of_sleep)
 
-    # TODO: review and cut
-    def test_if_server_is_NOT_initalized_we_get_an_error(self, administrator, mock_subprocess_run):
-        mock_subprocess_run.side_effect = Exception("Server is not initialized")
-        with pytest.raises(Exception) as exception:
-            administrator._launch_jar()
+        administrator.build_and_launch_server()
 
-        assert str(exception.value) == "Server is not initialized"
+        mock_subprocess_run.assert_called_with(
+            [
+                "/usr/bin/java",
+                f'-Xmx4096M',
+                f'-Xms512M',
+                "-jar", "server.jar",
+                "nogui"
+            ],
+            cwd="/test/directory"
+        )
 
-    def test_can_update_eula(self, administrator, mock_eula_editor, mock_urlretrieve, mock_subprocess_run, mocker):
+    # * I'm not actually sure the best way of spelling out this logic in a test other than this.
+    # * the basic idea is that with the minecraft server we launch the jar once, the jar creates (amongst other things)
+    # * the end user license agreement (the eula we need to modify) and then the jar's process exits asking you to
+    # * update the eula. once it's updated we can launch the jar again and the server will run.
+    # * It feels like in the spirit of "tests as documentation" we'd do something like assert the first call, then the
+    # * eula update, then the second call in that order, but I don't know if that's actually possible.
+    def test_can_update_eula(self, administrator, mock_eula_editor, mock_urlretrieve, mock_subprocess_run):
         administrator.build_and_launch_server()
 
         assert mock_subprocess_run.call_count == 2
