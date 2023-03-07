@@ -4,8 +4,8 @@ import urllib.request
 from dataclasses import dataclass
 from os import makedirs, path
 
-from directory_builder import DirectoryBuilder
-from editor import EulaEditor
+from server_administrator.directory_builder import DirectoryBuilder
+from server_administrator.editor import EulaEditor
 
 
 def seconds_of_sleep(seconds: int):

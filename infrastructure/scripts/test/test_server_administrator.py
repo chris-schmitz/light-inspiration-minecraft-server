@@ -7,11 +7,6 @@ from server_administrator.server_administrator import ServerAdministrator, Serve
 
 
 class Fixtures:
-    @pytest.fixture
-    def mock_directory_builder(self, mocker):
-        mock = MagicMock()
-        mocker.patch("directory_builder.DirectoryBuilder", mock)
-        return mock
 
     @pytest.fixture
     def mock_urlretrieve(self, mocker):
@@ -23,6 +18,12 @@ class Fixtures:
         mock = MagicMock()
         mocker.patch("subprocess.run", mock)
         return mock
+
+    @pytest.fixture
+    def mock_directory_builder(self):
+        from server_administrator.directory_builder import DirectoryBuilder
+        mock_builder = create_autospec(DirectoryBuilder)
+        return mock_builder("")
 
     @pytest.fixture
     def mock_eula_editor(self):

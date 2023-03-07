@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from InvalidEulaException import InvalidEulaException
+from server_administrator.InvalidEulaException import InvalidEulaException
 
 
 class StateLineInformation:
