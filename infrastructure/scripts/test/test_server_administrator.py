@@ -47,7 +47,6 @@ class Fixtures:
     @pytest.fixture
     def server_configuration(self):
         return ServerConfiguration(
-            minecraft_user="minecraft",
             directory="/opt/minecraft/server",
             port=25565,
             max_memory=1024,
@@ -69,7 +68,6 @@ class TestRunner(Fixtures):
     def test_can_correctly_launch_minecraft_jar(self, mock_directory_builder, mock_eula_editor,
                                                 mock_subprocess_run, mock_seconds_of_sleep, mock_urlretrieve):
         config = ServerConfiguration(
-            minecraft_user="anyuser",
             max_memory=4096,
             min_memory=512,
             directory="/test/directory",

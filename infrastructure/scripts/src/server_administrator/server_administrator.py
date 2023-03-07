@@ -2,7 +2,7 @@ import subprocess
 import time
 import urllib.request
 from dataclasses import dataclass
-from os import makedirs, path
+from os import path
 
 from server_administrator.directory_builder import DirectoryBuilder
 from server_administrator.editor import EulaEditor
@@ -14,8 +14,7 @@ def seconds_of_sleep(seconds: int):
 
 @dataclass
 class ServerConfiguration:
-    def __init__(self, minecraft_user, directory, port, max_memory, min_memory):
-        self.minecraft_user = minecraft_user
+    def __init__(self, directory, port, max_memory, min_memory):
         self.directory = directory
         self.port = port
         self.max_memory = max_memory
@@ -59,18 +58,3 @@ class ServerAdministrator:
             ],
             cwd=self.server_config.directory
         )
-
-
-# TODO: move this to a stand alone launcher file
-if __name__ == "__main__":
-    print("===> Building and launching Minecraft server <===")
-    configuration = ServerConfiguration(
-        minecraft_user="minecraft",
-        directory="/Users/cschmitz/Desktop/opt/minecraft/server",
-        port=25565,
-        max_memory=2048,
-        min_memory=1024)
-    directory_builder = DirectoryBuilder(makedirs)
-    eula_editor = EulaEditor()
-    administrator = ServerAdministrator(configuration, directory_builder, eula_editor, seconds_of_sleep)
-    administrator.build_and_launch_server()
