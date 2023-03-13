@@ -32,15 +32,18 @@ resource "aws_instance" "minecraft_ec2" {
 
   user_data = file("userdata.tpl")
 
-#  provisioner "local-exec" {
-#    command = templatefile("${path.module}/ssh-config.tpl", {
-#      serverLabel=self.tags.Name
-#      hostname= self.public_ip
-#      user= "ec2-user",
-#      identityFile = "~/.ssh/minecraft_key"
-#    })
-#    interpreter = ["bash", "-c"]
-#  }
+  provisioner "file" {
+    source      = "${path.module}/scripts"
+    destination = "/home/ec2-user"
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file("~/.ssh/minecraft_key")
+      host        = self.public_ip
+      timeout     = "1m"
+    }
+  }
 
   tags = {
     Name   = "minecraft-server"
